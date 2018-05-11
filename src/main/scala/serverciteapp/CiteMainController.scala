@@ -61,7 +61,6 @@ object CiteMainController {
 		of the CEX library.
 	*/
 	def hideTabs:Unit = {
-	  g.console.log("hiding Tabs")
 	  CiteMainModel.showTexts.value = false 
 	  CiteMainModel.showNg.value = false
 	  CiteMainModel.showCollections.value = false
@@ -75,9 +74,12 @@ object CiteMainController {
 	*/
 	def clearRepositories:Unit = {
 		O2Model.currentCatalog.value = None
-		/*
+		NGController.clearResults
 		NGModel.corpusOrUrn.value = None
-		ObjectModel.collRep.value = None
+		ObjectModel.collections.value.clear
+		ObjectModel.labelMap.value = None
+		CiteBinaryImageModel.binaryImageCollectionRepo.value = None
+		/*
 		CiteMainModel.mainLibrary.value = None
 		CommentaryModel.clearComments
 		*/
@@ -102,8 +104,17 @@ object CiteMainController {
 			// O2Query.updateCatalog, in turn, takes care of activating the "Explore Texts" tab.
 
 			// Collection Repository Stuff
+			ObjectModel.updateCollections // which hands off to ObjectQuery.updateCatalog
+			// ObjectQuery.updateCatalog, in turn, takes care of activating the "Collections" tab.
+
+
+
 			// Relations stuff
 			// Data Model Stuff
+			//     the datamodel task will, in turn, start the process
+			//     of building out CiteBinaryImages
+			val dmTask = Task{ CiteMainQuery.getJson(CiteMainQuery.getDataModels, s"/datamodels", urn = None) }
+			val dmFuture = dmTask.runAsync	
 
 			// Load request parameter
 			CiteMainModel.requestParameterUrn.value match {

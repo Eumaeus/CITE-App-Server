@@ -41,10 +41,8 @@ object O2Model {
 
 	// Add an entry to the citation-history
 	def updateUrnHistory(u:CtsUrn, label:String):Unit = {
-		g.console.log(s"Updating urnhistory with ${u} and ${label}")
 		try {
 			if (hasTextRepo.value) {
-				g.console.log("hasTextRepo.value == true")
 				val tempList:List[Tuple2[CtsUrn,String]] = urnHistory.value.toList.reverse.map(t => { Tuple2(t._2, t._3)})
 				val newTempList:List[Tuple2[CtsUrn,String]] = tempList ++ List(Tuple2(u,label))
 				val indexedTempList:List[Tuple3[Int,CtsUrn,String]] = newTempList.zipWithIndex.map( t => {
@@ -211,7 +209,6 @@ object O2Model {
 	def clearPassage:Unit = {
 		O2Model.versionsForCurrentUrn.value = 0
 		O2Model.currentListOfUrns.value.clear
-		//DSEModel.currentListOfDseUrns.value.clear
 		O2Model.currentCorpus.value.clear
 	}
 

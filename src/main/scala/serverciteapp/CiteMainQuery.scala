@@ -65,7 +65,34 @@ object CiteMainQuery {
 			s"Current Library: ${libName}. ${libUrn}. ${libLicense}. At: ${CiteMainModel.serviceUrl.value}"
 		}	
 
-		g.console.log(CiteMainModel.currentLibraryMetadataString.value)
 	}
+
+	/* DataModels */
+	def getDataModels(jstring:String, urn:Option[Urn] =None):Unit ={
+		val citeObjJson:CiteObjJson = CiteObjJson()
+		val dms:Vector[DataModel] = citeObjJson.dataModels(jstring)
+		val odms:Option[Vector[DataModel]] = {
+			dms.size match {
+				case n if (n > 1) => Some(dms)
+				case _ => None
+			}	
+		}
+		odms match {
+			case Some(dm) => {
+					DataModelModel.dataModels.value = Some(dm)
+					CiteBinaryImageController.setImageSwitch
+					/*
+					CommentaryModel.loadAllComments
+					*/
+			
+					// Start the process of building a binary image collection repo
+					CiteBinaryImageModel.initBinaryImageRepo
+			
+				}
+				case None => { 
+					DataModelController.clearDataModels
+				}
+		}
+	}	
 
 }

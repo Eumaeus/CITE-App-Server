@@ -97,6 +97,7 @@ object CiteMainController {
 
 		try {
 
+			CiteMainModel.requestParameterUrn.value = CiteMainController.getRequestUrn
 			/* Text Repository Stuff
 			-------------------------------------
 			*/
@@ -107,30 +108,15 @@ object CiteMainController {
 			ObjectModel.updateCollections // which hands off to ObjectQuery.updateCatalog
 			// ObjectQuery.updateCatalog, in turn, takes care of activating the "Collections" tab.
 
-
-
 			// Relations stuff
+			RelationsModel.updateRelations
 			// Data Model Stuff
 			//     the datamodel task will, in turn, start the process
 			//     of building out CiteBinaryImages
 			val dmTask = Task{ CiteMainQuery.getJson(CiteMainQuery.getDataModels, s"/datamodels", urn = None) }
 			val dmFuture = dmTask.runAsync	
 
-			// Load request parameter
-			CiteMainModel.requestParameterUrn.value match {
-				case Some(u) => {
-					u match {
-						case CtsUrn(ctsurn) => {
-							//DataModelController.retrieveTextPassage(None, CtsUrn(ctsurn))
-						}
-						case Cite2Urn(cite2urn) => {
-							//DataModelController.retrieveObject(None, Cite2Urn(cite2urn))
-						}
-						case _ => // do nothing
-					}
-				}	
-				case None => // do nothing
-			}
+			
 
 		} catch  {
 			case e: Exception => {

@@ -35,6 +35,7 @@ def objectLinks(contextUrn:Option[Cite2Urn], propVal:Cite2Urn) = {
 				{ DataModelView.objectLinkItem(contextUrn, propVal).bind }
 				{ DataModelView.imageLinkItem(contextUrn, propVal).bind }
 				{ DataModelView.dseLinkItem(contextUrn, propVal).bind }
+				{ DataModelView.relationsLinkItem(contextUrn, propVal).bind }
 			</ul>
 		}
 		case None => { 
@@ -60,8 +61,16 @@ def textLinkItem(contextUrn:Option[Cite2Urn], u:CtsUrn, idString:String = "", gr
 			<li class={groupClass} id={idString}>
 				<a
 					onclick={ event: Event => {
-						DataModelController.retrieveTextPassage(contextUrn, u)
-					}}>
+						val mouseEvent = event.asInstanceOf[MouseEvent]
+						if (mouseEvent.metaKey){
+							true
+						} else {
+							DataModelController.retrieveTextPassage(contextUrn, u)
+							false
+						}
+					}}
+					href={ s"?urn=${u}" }
+					>
 					{u.toString}
 				</a>
 			</li>
@@ -98,9 +107,17 @@ def textLinkItem(contextUrn:Option[Cite2Urn], u:CtsUrn, idString:String = "", gr
 				case true => {
 					<li class={groupClass} id={idString}>
 						<a onclick={ event: Event => {
+							val mouseEvent = event.asInstanceOf[MouseEvent]
+							if (mouseEvent.metaKey){
+								true
+							} else {
 								DataModelController.retrieveObject(contextUrn,tempUrn)
+								false
 							}
-					} > { 
+						}
+					} 
+					href={ s"?urn=${tempUrn}" }
+					> { 
 						labeled match {
 							case true => {
 								s"${ObjectModel.labelMap.value.get(propVal.dropExtensions.dropProperty)}" 
@@ -132,9 +149,17 @@ def textLinkItem(contextUrn:Option[Cite2Urn], u:CtsUrn, idString:String = "", gr
 								case Some(c) => {
 									<li class={groupClass} id={idString}>
 										<a onclick={ event: Event => {
+											val mouseEvent = event.asInstanceOf[MouseEvent]
+											if (mouseEvent.metaKey){
+												true
+											} else {
 												DataModelController.retrieveObject(contextUrn,tempUrn)
+												false
 											}
-									} > { 
+										}
+									} 
+									href={ s"?urn=${tempUrn}" }
+									> { 
 									labeled match {
 										case true => {  
 											val l:String = c.collectionLabel
@@ -238,9 +263,17 @@ def textLinkItem(contextUrn:Option[Cite2Urn], u:CtsUrn, idString:String = "", gr
 										Some(rois)
 									}
 								}
-							DataModelController.viewImage(contextUrn, co, urn, roisToPaint)
+								val mouseEvent = event.asInstanceOf[MouseEvent]
+								if (mouseEvent.metaKey){
+									true
+								} else {
+									DataModelController.viewImage(contextUrn, co, urn, roisToPaint)
+									false
+								}
 							}
-						} >Remote Image</a></span>
+						} 
+						href={ s"?urn=${urn}" }
+						>Remote Image</a></span>
 					}
 					case _ => {
 						<!-- empty content -->
@@ -265,7 +298,7 @@ def textLinkItem(contextUrn:Option[Cite2Urn], u:CtsUrn, idString:String = "", gr
 			case _ => {
 				<div>
 				{ mappedDseToTextContainer.bind }
-				 <!-- { mappedCommentaryToTextContainer.bind } -->
+			 { mappedCommentaryToTextContainer.bind }
 				</div>
 			}
 		}
@@ -285,7 +318,6 @@ def textLinkItem(contextUrn:Option[Cite2Urn], u:CtsUrn, idString:String = "", gr
 		</div>
 	}
 
-	/*
 	@dom
 	def mappedCommentaryToTextContainer = {
 		<div id="o2_mappedCommentContainer" class={
@@ -298,9 +330,7 @@ def textLinkItem(contextUrn:Option[Cite2Urn], u:CtsUrn, idString:String = "", gr
 			{ commentaryPassages.bind}
 		</div>	
 	}
-	*/
 
-	/*
 	@dom
 	def commentaryPassages = {
 		O2Model.currentNumberOfCitableNodes.bind match {
@@ -322,7 +352,7 @@ def textLinkItem(contextUrn:Option[Cite2Urn], u:CtsUrn, idString:String = "", gr
 			}
 		}	
 	}
-	*/
+	
 
 	@dom
 	def mappedDsePassages = {
@@ -339,5 +369,17 @@ def textLinkItem(contextUrn:Option[Cite2Urn], u:CtsUrn, idString:String = "", gr
 		}	
 	}
  	
+	@dom
+	def relationsLinkItem(contextUrn:Option[Cite2Urn],propVal:Cite2Urn) = {
+		<span class="citeLinks_linkSpan"> 
+			<a onclick={ event: Event => {
+					js.Dynamic.global.document.getElementById("relations_urnInput").value = propVal.toString
+					CiteMainView.changeTab("relations")
+					RelationsController.changeUrn(s"${propVal.toString}")
+				}
+			}>Find Relations</a>
+			
+		</span>
+	}
 
 }

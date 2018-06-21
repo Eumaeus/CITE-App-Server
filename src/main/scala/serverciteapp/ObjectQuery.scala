@@ -58,7 +58,21 @@ object ObjectQuery {
 
 				ObjectModel.updateLabelMap
 				ObjectController.updateUserMessage(s"Updated collections repository with ${ObjectModel.collections.value.size} collections.",0)
-			}
+
+				// Load request parameter
+				CiteMainModel.requestParameterUrn.value match {
+					case Some(u) => {
+						u match {
+							case Cite2Urn(c2u) => {
+								DataModelController.retrieveObject(None, Cite2Urn(c2u))
+								CiteMainView.changeTab("object")
+							}
+							case _ => // do nothing
+						}
+					}	
+					case None => // do nothing
+				}
+			}				
 			case None => {
 				ObjectModel.collections.value.clear
 				ObjectModel.hasCollections.value = false
@@ -76,6 +90,11 @@ object ObjectQuery {
 			case n if (n > 0) => {
 				ObjectModel.labelMap.value = Some(ol)
 				ObjectController.preloadUrn
+				// Improve Relations-labels, if appropriate
+				if (RelationsModel.allVerbs.value.size > 0) {
+					RelationsModel.loadVerbs(RelationsModel.allVerbs.value.toVector)
+				}
+
 			}
 			case _ => {
 				ObjectModel.labelMap.value = None	
@@ -110,6 +129,17 @@ object ObjectQuery {
 
 	def getObject(jstring:String, urn:Option[Urn] = None):Unit = {
 		try {
+			// grab any DSE records that came with this corpus!
+			val dseVec:Option[Vector[DseRecord]] = objJson.dsesForVectorOfCiteObjects(jstring)
+			dseVec match {
+				case Some(dv) => {
+					DSEModel.updateDsesForCurrentObjects(dv)
+				}
+				case None => {
+					DSEModel.clearDsesForCurrentObjects
+				}
+			}
+			
 			ObjectModel.collectionUrnCheck(urn.get.asInstanceOf[Cite2Urn])
 			val vco:Vector[CiteObject] = objJson.vectorOfCiteObjects(jstring)
 			vco.size match {
@@ -122,18 +152,6 @@ object ObjectQuery {
 				}
 				case _ => {
 					ObjectModel.boundObjects.value.clear	
-				}
-			}
-			// grab any DSE records that came with this corpus!
-			val dseVec:Option[Vector[DseRecord]] = objJson.dsesForVectorOfCiteObjects(jstring)
-			dseVec match {
-				case Some(dv) => {
-					g.console.log(s"OQ.getObject for ${urn} got ${dv.size} dses.")
-					DSEModel.updateDsesForCurrentObjects(dv)
-				}
-				case None => {
-					g.console.log(s"OQ.getObject for ${urn} got NO dses.")
-					DSEModel.clearDsesForCurrentObjects
 				}
 			}
 
@@ -164,7 +182,6 @@ object ObjectQuery {
 				case Some(dv) => DSEModel.updateDsesForCurrentObjects(dv)
 				case None => DSEModel.clearDsesForCurrentObjects
 			}
-			g.console.log(s"[getRangeOrCollection] Got ${urn} which came with ${dseVec.size} DSEs.")
 			// we'll do the same for Commentary eventually…	
 			ObjectModel.collectionUrnCheck(urn.get.asInstanceOf[Cite2Urn])
 			vco.size match {

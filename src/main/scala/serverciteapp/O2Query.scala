@@ -18,6 +18,7 @@ import edu.holycross.shot.ohco2._
 import edu.holycross.shot.dse._
 import edu.holycross.shot.citeobj._
 import edu.holycross.shot.citejson._
+import edu.holycross.shot.citerelation._
 
 import monix.execution.Scheduler.Implicits.global
 import monix.eval._
@@ -29,6 +30,7 @@ object O2Query {
 
 
 	val o2Json:Ohco2Json = Ohco2Json()
+	val relationsJson:RelationsJson = RelationsJson()
 
 	/* Queries */
 	val queryCatalog:String = "/texts"
@@ -60,6 +62,22 @@ object O2Query {
 				O2Controller.updateUserMessage(s"Updated text repository with ${O2Model.citedWorks.value.size} versions of works.",0)
 				CiteMainView.changeTab("text")
 				O2Controller.preloadUrn
+
+				// Load request parameter
+				CiteMainModel.requestParameterUrn.value match {
+					case Some(u) => {
+						u match {
+							case CtsUrn(ctsurn) => {
+								DataModelController.retrieveTextPassage(None, CtsUrn(ctsurn))
+								CiteMainView.changeTab("text")
+							}
+							case _ => // do nothing
+						}
+					}	
+					case None => // do nothing
+				}
+			
+
 			}
 			case None => {
 				O2Model.citedWorks.value.clear
@@ -154,10 +172,19 @@ object O2Query {
 			// grab any DSE records that came with this corpus!
 			val dseVec:Option[Vector[DseRecord]] = o2Json.dsesForCorpus(s)
 			dseVec match {
-				case Some(dv) => DSEModel.updateDsesForCurrentText(dv)
+				case Some(dv) => {
+					DSEModel.updateDsesForCurrentText(dv)
+				}
 				case None => DSEModel.clearDsesForCurrentText
 			}
 			// we'll do the same for Commentary eventually…	
+			val commentsVec:Option[Vector[CiteTriple]] = o2Json.commentaryForCorpus(s)
+			commentsVec match {
+				case Some(cv) => {
+					CommentaryModel.updateCurrentListOfComments(cv)
+				}
+				case None => CommentaryModel.clearComments
+			}
 
 
 			val tempCorpus:Corpus = Corpus(vcn)

@@ -210,7 +210,7 @@ def versionNodes(vCorp:O2Model.BoundCorpus) = {
 						}
 					}
 					val inDse = DSEModel.ctsInDse(n.urn)
-					//val hasComment = CommentaryModel.ctsHasCommentary(n.urn)
+					val hasComment = CommentaryModel.ctsHasCommentary(n.urn)
 					val passageClass:String = {
 						O2Model.checkForRTL(n.text) match {
 							case true => s"o2_textPassage rtl ${checkForLong}"
@@ -226,26 +226,42 @@ def versionNodes(vCorp:O2Model.BoundCorpus) = {
 							{  
 							
 								for (o <- inDse) yield {
-									<span 
+									<a 
 									class="o2_passageInDse"
 									onclick = { event: Event => {
-										val task = Task{ DataModelController.retrieveObject(None,o) }
-										val future = task.runAsync
-									}}>∞</span>									
+										val mouseEvent = event.asInstanceOf[MouseEvent]
+										if (mouseEvent.metaKey){
+											true
+										} else {
+											val task = Task{ DataModelController.retrieveObject(None,o) }
+											val future = task.runAsync
+											false
+										}
+									}}
+									href={ s"?urn=${o}" }
+									>▴</a>									
 								}	
 								
 							}
-							{  <!-- empty content -->
-							/*
+							{  
+							
 								for (c <- hasComment) yield {
-								<span 
+								<a 
 									class="o2_commentary"
 									onclick = { event: Event => {
-										val task = Task{ DataModelController.retrieveUrn(c) }
-										val future = task.runAsync
-									}}>*</span>
+										val mouseEvent = event.asInstanceOf[MouseEvent]
+										if (mouseEvent.metaKey){
+											true
+										} else {
+											val task = Task{ DataModelController.retrieveUrn(c) }
+											val future = task.runAsync
+											false
+										}
+									}}
+									href={ s"?urn=${c}" }
+									>*</a>
 								}
-								*/
+								
 							}
 							{ createXMLNode(n.text).bind }
 
@@ -352,14 +368,22 @@ def passageUrnSpan(urn:CtsUrn, s:String) = {
 	<span>
 	{ s }
 	</span>
-	<span
+	<a
 	class="app_clickable"
 	onclick={ event: Event => {
+			val mouseEvent = event.asInstanceOf[MouseEvent]
+			if (mouseEvent.metaKey){
+				true
+			} else {
 				O2Controller.changeUrn(urn)
+				false
+			}
 		}
-	}>
+	}
+	href={ s"?urn=${urn}" }
+	>
 	{ urn.toString}
-	</span>
+	</a>
 }
 
 def cursorWaiting = {

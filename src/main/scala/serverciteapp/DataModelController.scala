@@ -71,13 +71,30 @@ object DataModelController {
 	def hasText(u:CtsUrn):Boolean = {
 		O2Model.hasTextRepo.value match {
 			case true => {
-				O2Model.currentCatalog.value.get.texts.filter(_.urn ~~ u.dropPassage.dropVersion).size match {
+				O2Model.currentCatalog.value.get.texts.filter(_.urn ~~ u.dropPassage).size match {
 					case 0 => false
 					case _ => true
 				}
 			}
 			case false => {
 				false		
+			}
+		}
+	}
+
+	/* Check to see if the Commentary datamodel is present */
+	def hasCommentaryModel:Boolean = {
+		val commUrn:Cite2Urn = CommentaryModel.commentaryModel	
+		DataModelModel.dataModels.value match {
+			case None => {
+				false
+			}
+			case Some(dms) => {
+				val implementations:Vector[DataModel] = dms.filter(_.model == commUrn).toVector
+				implementations.size match {
+					case 0 => false
+					case _ => true
+				}	
 			}
 		}
 	}
@@ -125,23 +142,6 @@ object DataModelController {
 		}
 	}
 
-	/* Check to see if the Commentary datamodel is present */
-	/*
-	def hasCommentaryModel:Boolean = {
-		val commUrn:Cite2Urn = CommentaryModel.commentaryModel	
-		DataModelModel.dataModels.value match {
-			case None => false
-			case Some(dms) => {
-				val implementations:Vector[DataModel] = dms.filter(_.model == commUrn).toVector
-				implementations.size match {
-					case 0 => false
-					case _ => true
-				}	
-			}
-		}
-	}
-	*/
-
 
  	/*
 	Methods for switching tabs and loading text and objects
@@ -166,7 +166,6 @@ object DataModelController {
 	def retrieveObject(contextUrn:Option[Cite2Urn] = None, urn:Cite2Urn):Unit = {
 			val tempUrn:Cite2Urn = urn.dropExtensions
 			ObjectController.changeUrn(tempUrn)
-			ObjectController.changeObject
 			CiteMainView.changeTab("object")
 	}
 
